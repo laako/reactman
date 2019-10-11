@@ -1,6 +1,6 @@
-import React, { useState, useEffect, } from 'react';
+import React, { useState, useEffect } from 'react';
 import Player from './Player';
-import useInterval from './helpers/useInterval'
+import useInterval from './helpers/useInterval';
 
 const Taskhandler = () => {
 	const [playerDirection, setPlayerDirection] = useState('');
@@ -9,6 +9,18 @@ const Taskhandler = () => {
 		x: 0,
 		y: 0
 	});
+
+	const playgroundSettings = {
+		width: 400,
+		height: 400,
+		tickrate: 100,
+		speed: 10,
+		foodPosition: [],
+		generateFood() {
+			this.foodPosition.push({x: 0, y: 0})
+			console.log(this.foodPosition)
+		}
+	};
 
 	const handleKeydown = e => {
 		const up = e.key === 'ArrowUp';
@@ -26,66 +38,68 @@ const Taskhandler = () => {
 			up ? 'up' : down ? 'down' : left ? 'left' : right ? 'right' : prev
 		);
 
-		if (!playerMoving && (up || down || left || right)) setPlayerMoving(() => true);
+		if (!playerMoving && (up || down || left || right))
+			setPlayerMoving(() => true);
 	};
-
-	useEffect(() => {
-		document.addEventListener('keydown', handleKeydown);
-
-		return () => document.removeEventListener('keydown', handleKeydown);
-	}, []);
-
-	useEffect(() => {
-		console.log(playerMoving ? 'moving' : 'stopped');
-	}, [playerMoving]);
 
 	useInterval(() => {
 		if (playerMoving) {
 			if (!playerDirection) return;
 
-			if (playerDirection === 'left') {
-				setPlayerPosition(prevPos => {
-					return {
-						x: prevPos.x - 10,
-						y: prevPos.y
-					};
-				});
-			}
-
-			if (playerDirection === 'up') {
-				setPlayerPosition(prevPos => {
-					return {
-						x: prevPos.x,
-						y: prevPos.y - 10
-					};
-				});
-			}
-
-			if (playerDirection === 'down') {
-				setPlayerPosition(prevPos => {
-					return {
-						x: prevPos.x,
-						y: prevPos.y + 10
-					};
-				});
-			}
-
-			if (playerDirection === 'right') {
-				setPlayerPosition(prevPos => {
-					return {
-						x: prevPos.x + 10,
-						y: prevPos.y
-					};
-				});
-			}
+			setPlayerPosition(prevPos => {
+				if (
+					(playerDirection === 'left' &&
+						prevPos.x - playgroundSettings.speed < 0) ||
+					(playerDirection === 'right' &&
+						prevPos.x + playgroundSettings.speed >
+							playgroundSettings.width)
+				) {
+					setPlayerMoving(() => false);
+					return prevPos;
+				} else if (
+					(playerDirection === 'up' &&
+						prevPos.y - playgroundSettings.speed < 0) ||
+					(playerDirection === 'down' &&
+						prevPos.y + playgroundSettings.speed >
+							playgroundSettings.height)
+				) {
+					setPlayerMoving(() => false);
+					return prevPos;
+				}
+				return {
+					x:
+						playerDirection === 'left'
+							? prevPos.x - playgroundSettings.speed
+							: playerDirection === 'right'
+							? prevPos.x + playgroundSettings.speed
+							: prevPos.x,
+					y:
+						playerDirection === 'up'
+							? prevPos.y - playgroundSettings.speed
+							: playerDirection === 'down'
+							? prevPos.y + playgroundSettings.speed
+							: prevPos.y
+				};
+			});
 		}
-	}, 100);
+	}, playgroundSettings.tickrate);
+
+	useEffect(() => {
+		document.addEventListener('keydown', handleKeydown);
+
+		playgroundSettings.generateFood()
+
+		return () => document.removeEventListener('keydown', handleKeydown);
+	}, []);
 
 	const playgroundStyle = {
 		position: 'relative',
-		width: '400px',
-		height: '400px',
-		border: '1px solid black'
+		paddingRight: '20px',
+		paddingBottom: '20px',
+		width: `${playgroundSettings.width}px`,
+		height: `${playgroundSettings.height}px`,
+		border: '1px solid black',
+		background: 'black'
 	};
 
 	return (
