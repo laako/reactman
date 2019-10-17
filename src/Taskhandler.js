@@ -1,22 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Player from './Player';
 import useInterval from './helpers/useInterval';
+import Ghost from './Ghost';
 
 const Taskhandler = () => {
 	const [playerDirection, setPlayerDirection] = useState('');
 	const [playerMoving, setPlayerMoving] = useState(false);
+	const [ghostsMoving, setGhostsMoving] = useState(false);
 	const [foodPosition, setFoodPosition] = useState([]);
 	const [playerPosition, setPlayerPosition] = useState({
 		x: 0,
 		y: 0
 	});
-	const [score, setScore] = useState(0)
+	const [ghostPosition, setGhostPosition] = useState({ x: 200, y: 200 });
+	const [score, setScore] = useState(0);
 	const playgroundSettings = {
 		width: 200,
 		height: 200,
 		tickrate: 200,
 		speed: 20
-	}
+	};
 
 	const generateFoodPosition = () => {
 		const step = playgroundSettings.speed;
@@ -29,24 +32,43 @@ const Taskhandler = () => {
 		setFoodPosition(() => foods);
 	};
 
+	const moveGhosts = () => {
+		setGhostPosition(prev => {
+			// Get random direction
+			let randomNum = Math.floor(Math.random() * Math.floor(4));
+			const up = randomNum === 0;
+			const left = randomNum === 1;
+			const right = randomNum === 2;
+			const down = randomNum === 3;
+			return {
+				x: left && (prev.x < (playgroundSettings.width - playgroundSettings.speed))
+					? prev.x - playgroundSettings.speed
+					: right && (prev.x > (0 - playgroundSettings.speed))
+					? prev.x + playgroundSettings.speed
+					: prev.x,
+				y: up && (prev.y < (playgroundSettings.height - playgroundSettings.speed))
+					? prev.y - playgroundSettings.speed
+					: down && (prev.y > (0 - playgroundSettings.speed))
+					? prev.y + playgroundSettings.speed
+					: prev.y
+			};
+		});
+	};
+
 	const handleKeydown = e => {
 		const up = e.key === 'ArrowUp';
 		const down = e.key === 'ArrowDown';
 		const left = e.key === 'ArrowLeft';
 		const right = e.key === 'ArrowRight';
-		const space = e.key === ' ';
-
-		if (space) {
-			setPlayerDirection(() => '');
-			return;
-		}
 
 		setPlayerDirection(prev =>
 			up ? 'up' : down ? 'down' : left ? 'left' : right ? 'right' : prev
 		);
 
-		if (!playerMoving && (up || down || left || right))
+		if (!playerMoving && (up || down || left || right)) {
 			setPlayerMoving(() => true);
+			if (!ghostsMoving) setGhostsMoving(() => true);
+		}
 	};
 
 	useInterval(() => {
@@ -89,12 +111,13 @@ const Taskhandler = () => {
 				};
 			});
 		}
+		if (ghostsMoving) moveGhosts();
 	}, playgroundSettings.tickrate);
 
 	useEffect(() => {
 		generateFoodPosition();
 		document.addEventListener('keydown', handleKeydown);
-		return () => document.removeEventListener('keydown', handleKeydown);
+		// return () => document.removeEventListener('keydown', handleKeydown);
 	}, []);
 
 	const playgroundStyle = {
@@ -115,13 +138,28 @@ const Taskhandler = () => {
 		}
 		const foodLeft = foodPosition.filter(
 			singleFoodPosition =>
-				!(singleFoodPosition.x === playerPosition.x &&
-				singleFoodPosition.y === playerPosition.y)
+				!(
+					singleFoodPosition.x === playerPosition.x &&
+					singleFoodPosition.y === playerPosition.y
+				)
 		);
 		if (foodLeft.length < foodPosition.length) {
-			setScore(prev => prev + 1)
+			setScore(prev => prev + 1);
 		}
 		setFoodPosition(() => foodLeft);
+		if (foodPosition.length === 0) {
+			alert('Voitit pelin');
+			setPlayerMoving(() => false);
+			setGhostsMoving(() => false);
+		}
+		if (
+			playerPosition.x === ghostPosition.x &&
+			playerPosition.y === ghostPosition.y
+		) {
+			alert('Hävisit pelin');
+			setPlayerMoving(() => false);
+			setGhostsMoving(() => false);
+		}
 	}, [playerPosition]);
 
 	return (
@@ -132,6 +170,10 @@ const Taskhandler = () => {
 					playerPosition={playerPosition}
 					playgroundSettings={playgroundSettings}
 				/>
+				<Ghost
+					ghostPosition={ghostPosition}
+					playgroundSettings={playgroundSettings}
+				/>
 				{foodPosition.map((singleFood, i) => {
 					const style = {
 						position: 'absolute',
@@ -139,7 +181,7 @@ const Taskhandler = () => {
 						left: `${singleFood.x}px`,
 						border: '1px solid red',
 						display: 'inline-block',
-						transform: 'translate(15px, 10px)',
+						transform: 'translate(15px, 10px)'
 					};
 					return <div key={i} style={style}></div>;
 				})}
