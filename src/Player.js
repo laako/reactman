@@ -8,7 +8,7 @@ const Player = (props) => {
 		height: 'auto',
 		top: `${props.playerPosition.y}px`,
 		left: `${props.playerPosition.x}px`,
-		// transition: 'all 0.1s linear',
+		transition: `all ${props.playgroundSettings.tickrate/1000}s linear`,
 	}
 
 	return (

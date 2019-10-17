@@ -1,25 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Player from './Player';
 import useInterval from './helpers/useInterval';
 
 const Taskhandler = () => {
 	const [playerDirection, setPlayerDirection] = useState('');
 	const [playerMoving, setPlayerMoving] = useState(false);
+	const [playgroundSettings, setPlaygroundSettings] = useState({
+		width: 200,
+		height: 200,
+		tickrate: 200,
+		speed: 10
+	});
+	const [foodPosition, setFoodPosition] = useState([]);
 	const [playerPosition, setPlayerPosition] = useState({
 		x: 0,
 		y: 0
 	});
 
-	const playgroundSettings = {
-		width: 400,
-		height: 400,
-		tickrate: 100,
-		speed: 10,
-		foodPosition: [],
-		generateFood() {
-			this.foodPosition.push({x: 0, y: 0})
-			console.log(this.foodPosition)
+	const generateFoodPosition = () => {
+		const step = playgroundSettings.speed;
+		let foods = [];
+		for (let x = playgroundSettings.width; x >= 0; x -= step) {
+			for (let y = playgroundSettings.height; y >= 0; y -= step) {
+				foods.push({ x, y });
+			}
 		}
+		setFoodPosition(() => foods);
 	};
 
 	const handleKeydown = e => {
@@ -85,10 +91,8 @@ const Taskhandler = () => {
 	}, playgroundSettings.tickrate);
 
 	useEffect(() => {
+		generateFoodPosition();
 		document.addEventListener('keydown', handleKeydown);
-
-		playgroundSettings.generateFood()
-
 		return () => document.removeEventListener('keydown', handleKeydown);
 	}, []);
 
@@ -102,13 +106,41 @@ const Taskhandler = () => {
 		background: 'black'
 	};
 
+	const initialRender = useRef(true);
+	useEffect(() => {
+		if (initialRender.current) {
+			initialRender.current = false;
+			return;
+		}
+		const foodLeft = foodPosition.filter(
+			singleFoodPosition =>
+				!(singleFoodPosition.x === playerPosition.x &&
+				singleFoodPosition.y === playerPosition.y)
+		);
+		setFoodPosition(() => foodLeft);
+	}, [playerPosition]);
+
 	return (
-		<div style={playgroundStyle}>
-			<Player
-				playerDirection={playerDirection}
-				playerPosition={playerPosition}
-			/>
-		</div>
+		<>
+			<div style={playgroundStyle}>
+				<Player
+					playerDirection={playerDirection}
+					playerPosition={playerPosition}
+					playgroundSettings={playgroundSettings}
+				/>
+				{foodPosition.map((singleFood, i) => {
+					const style = {
+						position: 'absolute',
+						top: `${singleFood.y}px`,
+						left: `${singleFood.x}px`,
+						border: '1px solid red',
+						display: 'inline-block',
+						transform: 'translate(15px, 10px)',
+					};
+					return <div key={i} style={style}></div>;
+				})}
+			</div>
+		</>
 	);
 };
 
