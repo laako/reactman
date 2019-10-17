@@ -5,17 +5,18 @@ import useInterval from './helpers/useInterval';
 const Taskhandler = () => {
 	const [playerDirection, setPlayerDirection] = useState('');
 	const [playerMoving, setPlayerMoving] = useState(false);
-	const [playgroundSettings, setPlaygroundSettings] = useState({
-		width: 200,
-		height: 200,
-		tickrate: 200,
-		speed: 10
-	});
 	const [foodPosition, setFoodPosition] = useState([]);
 	const [playerPosition, setPlayerPosition] = useState({
 		x: 0,
 		y: 0
 	});
+	const [score, setScore] = useState(0)
+	const playgroundSettings = {
+		width: 200,
+		height: 200,
+		tickrate: 200,
+		speed: 20
+	}
 
 	const generateFoodPosition = () => {
 		const step = playgroundSettings.speed;
@@ -117,6 +118,9 @@ const Taskhandler = () => {
 				!(singleFoodPosition.x === playerPosition.x &&
 				singleFoodPosition.y === playerPosition.y)
 		);
+		if (foodLeft.length < foodPosition.length) {
+			setScore(prev => prev + 1)
+		}
 		setFoodPosition(() => foodLeft);
 	}, [playerPosition]);
 
@@ -140,6 +144,7 @@ const Taskhandler = () => {
 					return <div key={i} style={style}></div>;
 				})}
 			</div>
+			<p>Score: {score}</p>
 		</>
 	);
 };
