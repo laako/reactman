@@ -17,7 +17,7 @@ const Taskhandler = () => {
 	const playgroundSettings = {
 		width: 200,
 		height: 200,
-		tickrate: 200,
+		tickrate: 100,
 		speed: 20
 	};
 
@@ -41,14 +41,14 @@ const Taskhandler = () => {
 			const right = randomNum === 2;
 			const down = randomNum === 3;
 			return {
-				x: left && (prev.x < (playgroundSettings.width - playgroundSettings.speed))
+				x: left && (prev.x - playgroundSettings.speed > 0)
 					? prev.x - playgroundSettings.speed
-					: right && (prev.x > (0 - playgroundSettings.speed))
+					: right && (prev.x + playgroundSettings.speed < playgroundSettings.width)
 					? prev.x + playgroundSettings.speed
 					: prev.x,
-				y: up && (prev.y < (playgroundSettings.height - playgroundSettings.speed))
+				y: up && (prev.y - playgroundSettings.speed > 0)
 					? prev.y - playgroundSettings.speed
-					: down && (prev.y > (0 - playgroundSettings.speed))
+					: down && (prev.y + playgroundSettings.speed < playgroundSettings.height)
 					? prev.y + playgroundSettings.speed
 					: prev.y
 			};

@@ -5,7 +5,7 @@ const Ghost = (props) => {
         position: 'absolute',
         top: `${props.ghostPosition.y}px`,
         left: `${props.ghostPosition.x}px`,
-        transition: `all ${props.playgroundSettings.tickrate/1000}s linear`,
+        // transition: `all ${props.playgroundSettings.tickrate/1000}s linear`,
     }
     return (
         <img alt=" " style={ghostStyle} />
